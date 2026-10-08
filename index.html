@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แบบประเมินอาชีวอนามัย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- Login -->
+<section id="login" class="login" hidden>
+  <form id="login-form" class="login-card">
+    <h1>แบบประเมินอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม</h1>
+    <p class="muted" data-hospital></p>
+    <label>อีเมลทีม<input type="email" id="login-email" autocomplete="username" required></label>
+    <label>รหัสผ่าน<input type="password" id="login-pass" autocomplete="current-password" required></label>
+    <label>ชื่อของคุณ (แสดงว่าใครแก้ไข)<input type="text" id="login-name" autocomplete="name" required></label>
+    <button type="submit" class="btn primary">เข้าสู่ระบบ</button>
+    <p id="login-error" class="error" role="alert"></p>
+  </form>
+</section>
+
+<!-- App -->
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="topbar-title">
+      <strong>แบบประเมินอาชีวอนามัยและเวชกรรมสิ่งแวดล้อม</strong>
+      <span class="muted" data-hospital></span>
+    </div>
+    <div class="topbar-right">
+      <span id="sync" class="sync" title="สถานะการบันทึก">●</span>
+      <span id="who" class="muted"></span>
+      <button id="btn-print" class="btn ghost" type="button">พิมพ์</button>
+      <button id="btn-logout" class="btn ghost" type="button">ออกจากระบบ</button>
+    </div>
+  </header>
+  <div id="demo-banner" class="demo-banner" hidden>
+    โหมดทดลอง: ยังไม่ได้ตั้งค่า Supabase ใน <code>config.js</code> ข้อมูลจะบันทึกเฉพาะในเบราว์เซอร์นี้ (เครื่องอื่นจะไม่เห็น)
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="p1" aria-selected="true">ส่วนที่ 1 ประเมินมาตรฐาน</button>
+    <button role="tab" data-tab="p2" aria-selected="false">ส่วนที่ 2 ขึ้นทะเบียนคลินิก</button>
+    <button role="tab" data-tab="sum" aria-selected="false">สรุปผล</button>
+  </nav>
+
+  <!-- Part 1 -->
+  <main id="tab-p1" class="tab-panel">
+    <div class="scorebar" id="scorebar"></div>
+    <div class="layout">
+      <aside class="toc" id="p1-toc"></aside>
+      <div class="content">
+        <section class="panel intro">
+          <h2>ประเมินมาตรฐานการจัดบริการอาชีวอนามัยและเวชกรรมสิ่งแวดล้อมสำหรับโรงพยาบาลศูนย์/ทั่วไป</h2>
+          <div class="countdown" id="countdown"></div>
+          <h3>คำชี้แจง</h3>
+          <ul>
+            <li>การให้คะแนน 3 ต้องผ่านคะแนน 1 และ 2 มาก่อน (ยกเว้นข้อที่กำหนดเป็นอย่างอื่น)</li>
+            <li>รอบระยะเวลาการพิจารณาผลการดำเนินงานที่ผ่านมา 1 ปี ยกเว้นแนวทางการพิจารณา/เกณฑ์ที่กำหนดระยะเวลาเป็นอย่างอื่น</li>
+            <li>การพิจารณาการให้คะแนน : กรณีที่จะได้คะแนนในแต่ระดับ ต้องผ่านเกณฑ์การให้คะแนนทุกข้อตามลำดับ ยกเว้นข้อที่มี <span class="star">★</span> สามารถให้คะแนนตามข้อมูลที่มีได้</li>
+          </ul>
+          <details>
+            <summary>ความหมายของคะแนน</summary>
+            <table class="tbl">
+              <tr><th>3</th><td>มีการดำเนินการ หรือมีคุณลักษณะดังกล่าวในประเด็นมาตรฐานดังกล่าวอย่างครบถ้วนสมบูรณ์ มีความโดดเด่น เริ่มมีการประเมินผล และนำผลการประเมินมาปรับปรุง</td></tr>
+              <tr><th>2</th><td>มีการดำเนินการ หรือมีคุณลักษณะดังกล่าวในระดับเฉลี่ยเกือบครบถ้วนตามเกณฑ์ที่ระบุ โดยมีการทำงานในลักษณะเครือข่ายการทำงานมากขึ้น</td></tr>
+              <tr><th>1</th><td>เริ่มต้นดำเนินการ โดยมีแผน หรือมีคุณลักษณะดังกล่าวอยู่บ้าง ในบางเรื่อง บางด้านแต่ไม่ครบถ้วนทั้งหมดตามเกณฑ์ที่ระบุ</td></tr>
+              <tr><th>0</th><td>ไม่มีคุณลักษณะดังกล่าว หรือไม่ได้ดำเนินการในประเด็นที่ระบุไว้ในเกณฑ์</td></tr>
+            </table>
+          </details>
+        </section>
+        <div id="p1-items"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Part 2 -->
+  <main id="tab-p2" class="tab-panel" hidden>
+    <div class="scorebar" id="p2-bar"></div>
+    <div class="content narrow">
+      <section class="panel">
+        <p class="form-code">แบบ ม25ว3-5</p>
+        <h2 id="p2-title"></h2>
+        <p>ประกอบด้วย มาตรฐาน 3 ด้าน: 1. ด้านการให้บริการตรวจสุขภาพและการเก็บสิ่งส่งตรวจทางชีวภาพ
+          2. ด้านบุคลากรผู้ให้บริการอาชีวเวชกรรมและบุคลากรผู้สนับสนุนการให้บริการอาชีวเวชกรรม
+          3. ด้านเครื่องมือสำหรับการให้บริการอาชีวเวชกรรม</p>
+        <p class="muted">คำชี้แจง ทำเครื่องหมาย ✓ เมื่อมีเอกสาร/หลักฐานในข้อดังกล่าว และใส่ลิงก์ Google Drive ของหลักฐาน</p>
+        <div class="grid-form" id="p2-meta">
+          <label class="span2">ชื่อหน่วยบริการ<input data-meta="unitName"></label>
+          <label class="check span2"><input type="checkbox" data-meta="offsite"> ให้บริการนอกสถานที่ตั้งประจำของหน่วยบริการ</label>
+          <label>ตั้งอยู่เลขที่<input data-meta="addrNo"></label>
+          <label>ถนน<input data-meta="road"></label>
+          <label>ตำบล/แขวง<input data-meta="subdistrict"></label>
+          <label>อำเภอ/เขต<input data-meta="district"></label>
+          <label>จังหวัด<input data-meta="province"></label>
+          <label>ประเภทหน่วยบริการ
+            <select data-meta="unitType">
+              <option value="nonPrimary">มิใช่หน่วยบริการปฐมภูมิ (รพศ./รพท./รพช.)</option>
+              <option value="primary">หน่วยบริการปฐมภูมิ</option>
+            </select>
+          </label>
+        </div>
+      </section>
+      <div id="p2-items"></div>
+      <section class="panel">
+        <h3>ผู้ทำแบบประเมิน</h3>
+        <div class="grid-form" id="p2-sign">
+          <label>ลงชื่อ<input data-meta="signName"></label>
+          <label>ตำแหน่ง<input data-meta="signPosition"></label>
+          <label>ณ วันที่<input type="date" data-meta="signDate"></label>
+        </div>
+        <h3>หมายเหตุ</h3>
+        <ol id="p2-notes" class="notes"></ol>
+      </section>
+    </div>
+  </main>
+
+  <!-- Summary -->
+  <main id="tab-sum" class="tab-panel" hidden>
+    <div class="content narrow" id="summary"></div>
+  </main>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="data/part1.js"></script>
+<script src="data/part2.js"></script>
+<script src="assets/scoring.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
